@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gcloud-aio-auth = "*"
+numpy = "*"
+
+[dev-packages]
+codecov = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+sphinx = "*"
+"flake8" = "*"
+tox = "*"
+detox = "*"
+pytest-asyncio = "*"
+
+[requires]
+python_version = "3.6"

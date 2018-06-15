@@ -1,0 +1,1 @@
+MLENGINE_SCOPE = 'https://www.googleapis.com/auth/cloud-platform'
