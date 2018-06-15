@@ -1,7 +1,7 @@
 __title__ = 'asyncio-gcloud-ml-engine'
 __description__ = 'An implementation of Google Cloud ML Engine Prediction using aiohttp.'
 __url__ = 'https://github.com/brunoalano/asyncio-gcloud-ml-engine'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Bruno Alano'
 __author_email__ = 'bruno@neurologic.com.br'
 __license__ = 'MIT'
