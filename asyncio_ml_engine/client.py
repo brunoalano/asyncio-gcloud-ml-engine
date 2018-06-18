@@ -1,6 +1,10 @@
+import sys
+import json
+import math
 import asyncio
 import aiohttp
 import numpy as np
+from itertools import islice
 from gcloud.aio.auth import Token
 from .scopes import MLENGINE_SCOPE
 
@@ -9,6 +13,8 @@ DEFAULT_HEADERS = {
   'Accept': 'application/json',
   'Accept-Encoding': 'gzip, deflate'
 }
+
+GCE_MAX_POST_SIZE = 1572864
 
 class MachineLearningClient(object):
   """Interface with Google Machine Learning API.
@@ -95,12 +101,44 @@ class MachineLearningClient(object):
     url = BASE_URL + '/' + name
 
     if type(instances) is 'dict' and 'instances' in instances:
-      data_to_post = instances
+      data = instances['instances']
     elif type(instances) is list:
-      data_to_post = {'instances': instances}
+      data = instances
     elif type(instances) is np.ndarray:
-      data_to_post = {'instances': instances.tolist()}
+      data = instances.tolist()
     else:
       raise ValueError()
 
-    return await self.session.post(url, json=data_to_post, headers=headers)
+    items = []
+    items_size = []
+    for item in data:
+      item_dump = json.dumps(item)
+      item_size = sys.getsizeof(item_dump)
+      items.append(item)
+      items_size.append(item_size)
+
+    chunks = []
+    current_size_sum = 0
+    temp_chunk = []
+    for i, item in enumerate(items):
+      if current_size_sum + items_size[i] < GCE_MAX_POST_SIZE:
+        current_size_sum += items_size[i]
+        temp_chunk.append(item)
+      else:
+        chunks.append(temp_chunk)
+        temp_chunk = [item]
+        current_size_sum = items_size[i]
+    chunks.append(temp_chunk)
+
+    # create a request for each chunk
+    tasks = []
+    for chunk in chunks:
+      tasks.append(
+        self.session.post(url, json={'instances': chunk}, headers=headers))
+    results = await asyncio.gather(*tasks)
+    returns = []
+    for result in results:
+      data = await result.json()
+      for pred in data['predictions']:
+        returns.append(pred['scores'])
+    return returns
